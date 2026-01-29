@@ -46,8 +46,7 @@
   <div id="result"></div>
 
 <script>
-function check() {
-
+async function check() {
   const browserData = {
     userAgent: navigator.userAgent,
     language: navigator.language,
@@ -56,12 +55,40 @@ function check() {
     platform: navigator.platform
   };
 
-  let html = "<h3>Browser data:</h3>";
+  let html = "<h3>Browser / Fingerprint:</h3>";
   for (let key in browserData) {
     html += `<p><b>${key}</b>: ${browserData[key]}</p>`;
   }
 
-  html += "<h3 class='ok'>✅ Script works</h3>";
+  const ipResponse = await fetch("https://ipapi.co/json/");
+  const ipData = await ipResponse.json();
+
+  html += "<h3>IP / Geo:</h3>";
+  html += `<p><b>IP</b>: ${ipData.ip}</p>`;
+  html += `<p><b>Country</b>: ${ipData.country_name}</p>`;
+  html += `<p><b>City</b>: ${ipData.city}</p>`;
+  html += `<p><b>ISP</b>: ${ipData.org}</p>`;
+
+  let risk = "🟢 Low risk";
+  let riskClass = "ok";
+
+  if (
+    browserData.language !== "en-US" &&
+    !browserData.timezone.toLowerCase().includes(ipData.country_code.toLowerCase())
+  ) {
+    risk = "🟡 Medium risk (possible mismatch)";
+    riskClass = "warn";
+  }
+
+  if (
+    ipData.org.toLowerCase().includes("vpn") ||
+    ipData.org.toLowerCase().includes("proxy")
+  ) {
+    risk = "🔴 High risk (VPN / Proxy detected)";
+    riskClass = "warn";
+  }
+
+  html += `<h3 class="${riskClass}">${risk}</h3>`;
 
   document.getElementById("result").innerHTML = html;
 }
