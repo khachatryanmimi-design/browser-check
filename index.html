@@ -2,226 +2,176 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Network Intelligence</title>
+<title>Check IP & Internet Speed</title>
 
 <style>
-:root{
-  --bg:#020617;
-  --panel:#0f172a;
-  --card:#020617;
-  --blue:#2563eb;
-  --green:#22c55e;
-  --yellow:#facc15;
-  --red:#ef4444;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  background: radial-gradient(circle at top, #0f172a, #020617);
+  color: #e5e7eb;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Inter,Segoe UI,Arial,sans-serif;
-  background:linear-gradient(140deg,#020617,#020617,#020617);
-  color:var(--text);
+
+.container {
+  width: 380px;
+  background: #020617;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 25px 60px rgba(0,0,0,.6);
 }
-header{
-  background:linear-gradient(90deg,#020617,#0f172a);
-  padding:20px 40px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+
+h1 {
+  text-align: center;
+  font-size: 22px;
+  margin-bottom: 24px;
 }
-header h1{
-  margin:0;
-  font-size:20px;
-  color:#facc15;
+
+.section {
+  margin-bottom: 18px;
 }
-nav span{
-  margin-left:20px;
-  color:var(--muted);
-  font-size:14px;
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+  font-size: 15px;
 }
-.container{
-  max-width:1100px;
-  margin:40px auto;
-  padding:0 20px;
+
+.value {
+  color: #38bdf8;
+  font-weight: 600;
 }
-.hero{
-  text-align:center;
-  margin-bottom:40px;
+
+button {
+  margin-top: 20px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
 }
-.hero h2{
-  font-size:32px;
-  margin-bottom:10px;
+
+button:hover {
+  opacity: .9;
 }
-.hero p{
-  color:var(--muted);
-}
-button{
-  background:var(--blue);
-  border:none;
-  padding:14px 30px;
-  color:white;
-  border-radius:12px;
-  font-size:15px;
-  cursor:pointer;
-  margin-top:20px;
-}
-button:hover{background:#1e40af}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-  gap:20px;
-}
-.card{
-  background:var(--panel);
-  border-radius:18px;
-  padding:20px;
-}
-.card h3{
-  margin-top:0;
-  margin-bottom:15px;
-  color:#93c5fd;
-  font-size:16px;
-}
-.value{font-size:14px;margin-bottom:6px}
-.ok{color:var(--green)}
-.warn{color:var(--yellow)}
-.high{color:var(--red)}
-.bar-bg{
-  width:100%;
-  height:10px;
-  background:#020617;
-  border-radius:10px;
-  overflow:hidden;
-}
-.bar{
-  height:100%;
-  width:0%;
-  transition:width .6s;
-}
-.bar.green{background:var(--green)}
-.bar.yellow{background:var(--yellow)}
-.bar.red{background:var(--red)}
-footer{
-  text-align:center;
-  padding:30px;
-  color:var(--muted);
-  font-size:13px;
+
+.risk-low { color: #22c55e; }
+.risk-medium { color: #eab308; }
+.risk-high { color: #ef4444; }
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  opacity: .6;
+  margin-top: 18px;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <h1>Network Intelligence</h1>
-  <nav>
-    <span>Browser</span>
-    <span>IP</span>
-    <span>Risk</span>
-    <span>Speed</span>
-  </nav>
-</header>
-
 <div class="container">
-  <div class="hero">
-    <h2>Browser, Network & Trust Diagnostics</h2>
-    <p>Analyze your connection, identity signals and network quality</p>
-    <button onclick="run()">Run Full Scan</button>
+  <h1>Network & Browser Check</h1>
+
+  <div class="section">
+    <div class="row"><span>Ping</span><span class="value" id="ping">– ms</span></div>
+    <div class="row"><span>Download</span><span class="value" id="download">– Mbps</span></div>
+    <div class="row"><span>Upload</span><span class="value" id="upload">– Mbps</span></div>
   </div>
 
-  <div id="content" class="grid"></div>
+  <div class="section">
+    <div class="row"><span>Language</span><span class="value" id="lang"></span></div>
+    <div class="row"><span>Timezone</span><span class="value" id="tz"></span></div>
+    <div class="row"><span>Platform</span><span class="value" id="platform"></span></div>
+    <div class="row"><span>Screen</span><span class="value" id="screen"></span></div>
+  </div>
+
+  <div class="section">
+    <div class="row"><span>IP</span><span class="value" id="ip">–</span></div>
+    <div class="row"><span>Country</span><span class="value" id="country">–</span></div>
+    <div class="row"><span>ISP</span><span class="value" id="isp">–</span></div>
+    <div class="row"><span>Risk</span><span class="value" id="risk">–</span></div>
+    <div id="reason" style="font-size:13px; opacity:.75; margin-top:6px;"></div>
+  </div>
+
+  <button onclick="startAll()">Check My Browser & Internet</button>
+
+  <div class="footer">Client-side diagnostics tool</div>
 </div>
 
-<footer>
-  Client-side diagnostics · No cookies · No tracking
-</footer>
-
 <script>
-async function run(){
-  content.innerHTML="";
-  browserCard();
-  const ip=await ipCard();
-  riskCard(ip);
-  await speedCard();
+async function startAll() {
+  browserInfo();
+  await speedTest();
+  await ipInfo();
+  riskCheck();
 }
 
-function browserCard(){
-  const d={
-    UserAgent:navigator.userAgent,
-    Language:navigator.language,
-    Timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
-    Platform:navigator.platform,
-    Screen:screen.width+" x "+screen.height,
-    CPU:navigator.hardwareConcurrency,
-    Memory:navigator.deviceMemory||"Unknown"
-  };
-  let h="<div class='card'><h3>Browser Fingerprint</h3>";
-  for(let k in d) h+=`<div class="value">${k}: ${d[k]}</div>`;
-  h+="</div>";
-  content.innerHTML+=h;
+// 🔹 Browser
+function browserInfo() {
+  document.getElementById("lang").textContent = navigator.language;
+  document.getElementById("tz").textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  document.getElementById("platform").textContent = navigator.platform;
+  document.getElementById("screen").textContent = screen.width + " x " + screen.height;
 }
 
-async function ipCard(){
-  const r=await fetch("https://ipapi.co/json/");
-  const d=await r.json();
-  let h="<div class='card'><h3>IP & Network</h3>";
-  h+=`<div class="value">IP: ${d.ip}</div>`;
-  h+=`<div class="value">Country: ${d.country_name}</div>`;
-  h+=`<div class="value">City: ${d.city}</div>`;
-  h+=`<div class="value">ISP: ${d.org}</div>`;
-  h+=`<div class="value">ASN: ${d.asn}</div>`;
-  h+="</div>";
-  content.innerHTML+=h;
-  return d;
+// 🔹 Speed
+async function speedTest() {
+  // Ping
+  let start = performance.now();
+  await fetch("https://www.google.com/images/phd/px.gif", { mode: "no-cors" });
+  document.getElementById("ping").textContent = Math.round(performance.now() - start) + " ms";
+
+  // Download
+  start = performance.now();
+  await fetch("https://speed.cloudflare.com/__down?bytes=6000000");
+  let time = (performance.now() - start) / 1000;
+  let down = (6 * 8) / time;
+  document.getElementById("download").textContent = down.toFixed(2) + " Mbps";
+
+  // Upload
+  let data = new Uint8Array(3 * 1024 * 1024);
+  start = performance.now();
+  await fetch("https://speed.cloudflare.com/__up", { method: "POST", body: data });
+  time = (performance.now() - start) / 1000;
+  let up = (data.length * 8) / time / 1e6;
+  document.getElementById("upload").textContent = up.toFixed(2) + " Mbps";
 }
 
-function riskCard(ip){
-  let risk="Low risk",cls="ok",reason=[];
-  if(!Intl.DateTimeFormat().resolvedOptions().timeZone
-     .toLowerCase().includes(ip.country_name.toLowerCase())){
-    risk="Medium risk";cls="warn";
-    reason.push("Timezone does not match IP location");
+// 🔹 IP
+async function ipInfo() {
+  const res = await fetch("https://ipapi.co/json/");
+  const d = await res.json();
+  document.getElementById("ip").textContent = d.ip;
+  document.getElementById("country").textContent = d.country_name;
+  document.getElementById("isp").textContent = d.org;
+}
+
+// 🔹 Risk logic
+function riskCheck() {
+  const lang = navigator.language;
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  let risk = "🟢 Low risk";
+  let cls = "risk-low";
+  let reason = "Your browser environment looks consistent.";
+
+  if (!tz.includes("Asia") && lang === "en-US") {
+    risk = "🟡 Medium risk";
+    cls = "risk-medium";
+    reason = "Language and timezone do not match your IP region. VPN or proxy possible.";
   }
-  const isp=ip.org.toLowerCase();
-  if(isp.includes("vpn")||isp.includes("proxy")||isp.includes("hosting")){
-    risk="High risk";cls="high";
-    reason.push("VPN / Proxy / Hosting detected");
-  }
-  let h="<div class='card'><h3>Risk Assessment</h3>";
-  h+=`<div class="${cls}">${risk}</div>`;
-  if(reason.length) h+=`<div class="value">${reason.join(". ")}</div>`;
-  else h+=`<div class="value">Configuration looks consistent</div>`;
-  h+="</div>";
-  content.innerHTML+=h;
-}
 
-async function speedCard(){
-  let h=`<div class="card">
-    <h3>Network Speed</h3>
-    Ping <span id="ping">...</span> ms
-    <div class="bar-bg"><div id="pingBar" class="bar green"></div></div><br>
-    Download
-    <div class="bar-bg"><div id="down" class="bar green"></div></div><br>
-    Upload
-    <div class="bar-bg"><div id="up" class="bar yellow"></div></div>
-  </div>`;
-  content.innerHTML+=h;
-
-  let t=performance.now();
-  await fetch("https://www.cloudflare.com/cdn-cgi/trace");
-  let ping=Math.round(performance.now()-t);
-  ping.innerText=ping;
-  pingBar.style.width=Math.min(100,100-ping)+"%";
-
-  t=performance.now();
-  await fetch("https://speed.cloudflare.com/__down?bytes=8000000");
-  down.style.width="80%";
-
-  t=performance.now();
-  await fetch("https://speed.cloudflare.com/__up",{method:"POST",body:new Blob([new ArrayBuffer(3000000)])});
-  up.style.width="60%";
+  document.getElementById("risk").textContent = risk;
+  document.getElementById("risk").className = "value " + cls;
+  document.getElementById("reason").textContent = reason;
 }
 </script>
 
