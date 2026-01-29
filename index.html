@@ -6,40 +6,52 @@
 
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      padding: 40px;
-    }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(120deg, #0f172a, #1e293b);
+    color: #e5e7eb;
+    padding: 40px;
+    text-align: center;
+  }
 
-    button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border-radius: 8px;
-    }
+  h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    color: #facc15;
+    text-shadow: 1px 1px 5px #2563eb;
+  }
 
-    button:hover {
-      background: #1e40af;
-    }
+  button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 10px;
+    margin-top: 15px;
+    transition: 0.3s;
+  }
 
-    #result {
-      margin-top: 30px;
-      background: #020617;
-      padding: 20px;
-      border-radius: 10px;
-    }
+  button:hover {
+    background: #1e40af;
+  }
 
-    .ok { color: #22c55e; }
-    .warn { color: #facc15; }
-  </style>
-</head>
+  #result {
+    margin-top: 30px;
+    background: #020617;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: left;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 
-<body>
+  .ok { color: #22c55e; font-weight: bold; }
+  .warn { color: #facc15; font-weight: bold; }
+  .high { color: #f87171; font-weight: bold; }
+</style>
 
   <h1>My Fingerprint & IP Tool</h1>
   <button onclick="check()">Check my browser</button>
@@ -70,28 +82,26 @@ async function check() {
   html += `<p><b>City</b>: ${ipData.city}</p>`;
   html += `<p><b>ISP</b>: ${ipData.org}</p>`;
 
+  // Умная оценка риска
   let risk = "🟢 Low risk";
   let riskClass = "ok";
 
-  if (
-    browserData.language !== "en-US" &&
-    !browserData.timezone.toLowerCase().includes(ipData.country_code.toLowerCase())
-  ) {
+  if (browserData.language !== "en-US" &&
+      !browserData.timezone.toLowerCase().includes(ipData.country_code.toLowerCase())) {
     risk = "🟡 Medium risk (possible mismatch)";
     riskClass = "warn";
   }
 
-  if (
-    ipData.org.toLowerCase().includes("vpn") ||
-    ipData.org.toLowerCase().includes("proxy")
-  ) {
+  if (ipData.org.toLowerCase().includes("vpn") ||
+      ipData.org.toLowerCase().includes("proxy")) {
     risk = "🔴 High risk (VPN / Proxy detected)";
-    riskClass = "warn";
+    riskClass = "high";
   }
 
-  html += `<h3 class="${riskClass}">${risk}</h3>`;
+  html += `<h3 class="${riskClass}">Risk: ${risk}</h3>`;
 
-  html += `<button onclick="copyResult()">📋 Copy Result</button>`;
+  html += `<button onclick="copyResult()">📋 Copy Result</button> `;
+  html += `<button onclick="downloadResult()">💾 Download Report</button>`;
 
   document.getElementById("result").innerHTML = html;
 }
@@ -105,6 +115,15 @@ function copyResult() {
   document.execCommand("copy");
   window.getSelection().removeAllRanges();
   alert("✅ Result copied to clipboard");
+}
+
+function downloadResult() {
+  const el = document.getElementById("result");
+  const blob = new Blob([el.innerText], {type: "text/plain"});
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "fingerprint_report.txt";
+  link.click();
 }
 </script>
 
