@@ -1,66 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My Fingerprint Tool</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browser & IP Check</title>
 
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background:#0f172a;
+  color:#e5e7eb;
+  padding:40px;
+  text-align:center;
+}
+h1 {
+  color:#facc15;
+  margin-bottom:20px;
+}
+button {
+  background:#2563eb;
+  color:white;
+  border:none;
+  padding:12px 22px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+}
+button:hover { background:#1e40af; }
 
-  <style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(120deg, #0f172a, #1e293b);
-    color: #e5e7eb;
-    padding: 40px;
-    text-align: center;
-  }
+#result {
+  max-width:700px;
+  margin:30px auto;
+  text-align:left;
+}
 
-  h1 {
-    font-size: 2.5em;
-    margin-bottom: 20px;
-    color: #facc15;
-    text-shadow: 1px 1px 5px #2563eb;
-  }
+.card {
+  background:#020617;
+  padding:18px;
+  border-radius:12px;
+  margin-bottom:15px;
+}
 
-  button {
-    background: #2563eb;
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 10px;
-    margin-top: 15px;
-    transition: 0.3s;
-  }
-
-  button:hover {
-    background: #1e40af;
-  }
-
-  #result {
-    margin-top: 30px;
-    background: #020617;
-    padding: 25px;
-    border-radius: 15px;
-    text-align: left;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .ok { color: #22c55e; font-weight: bold; }
-  .warn { color: #facc15; font-weight: bold; }
-  .high { color: #f87171; font-weight: bold; }
+.ok { color:#22c55e; }
+.warn { color:#facc15; }
+.high { color:#ef4444; }
 </style>
+</head>
 
-  <h1>My Fingerprint & IP Tool</h1>
-  <button onclick="check()">Check my browser</button>
+<body>
 
-  <div id="result"></div>
+<h1>Browser & IP Check</h1>
+<button onclick="check()">Check my browser</button>
+
+<div id="result"></div>
 
 <script>
 async function check() {
-  const browserData = {
+  const b = {
     userAgent: navigator.userAgent,
     language: navigator.language,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -68,32 +64,29 @@ async function check() {
     platform: navigator.platform
   };
 
-  let html = "<h3>Browser / Fingerprint:</h3>";
-  for (let key in browserData) {
-    html += `<p><b>${key}</b>: ${browserData[key]}</p>`;
-  }
+  let html = "<div class='card'><b>Browser / Fingerprint</b><br><br>";
+  for (let k in b) html += k + ": " + b[k] + "<br>";
+  html += "</div>";
 
-  const ipResponse = await fetch("https://ipapi.co/json/");
-  const ipData = await ipResponse.json();
+  const r = await fetch("https://ipapi.co/json/");
+  const ip = await r.json();
 
-  html += "<h3>IP / Geo:</h3>";
-  html += `<p><b>IP</b>: ${ipData.ip}</p>`;
-  html += `<p><b>Country</b>: ${ipData.country_name}</p>`;
-  html += `<p><b>City</b>: ${ipData.city}</p>`;
-  html += `<p><b>ISP</b>: ${ipData.org}</p>`;
+  html += "<div class='card'><b>IP / Geo</b><br><br>";
+  html += "IP: " + ip.ip + "<br>";
+  html += "Country: " + ip.country_name + "<br>";
+  html += "City: " + ip.city + "<br>";
+  html += "ISP: " + ip.org + "<br>";
+  html += "</div>";
 
   let risk = "🟢 Low risk";
-  let riskClass = "ok";
+  let cls = "ok";
 
-  const timezoneCountry = browserData.timezone.split("/")[0]; // Asia / Europe / America
-  const ipCountry = ipData.country_name;
-
-  if (timezoneCountry.toLowerCase() !== ipCountry.toLowerCase()) {
-    risk = "🟡 Medium risk (timezone ≠ IP country)";
-    riskClass = "warn";
+  if (!b.timezone.toLowerCase().includes(ip.country_name.toLowerCase())) {
+    risk = "🟡 Medium risk";
+    cls = "warn";
   }
 
-  const isp = ipData.org.toLowerCase();
+  const isp = ip.org.toLowerCase();
   if (
     isp.includes("vpn") ||
     isp.includes("proxy") ||
@@ -101,35 +94,31 @@ async function check() {
     isp.includes("datacenter") ||
     isp.includes("cloud")
   ) {
-    risk = "🔴 High risk (VPN / Proxy / Hosting detected)";
-    riskClass = "high";
+    risk = "🔴 High risk";
+    cls = "high";
   }
 
-  html += `<h3 class="${riskClass}">Risk: ${risk}</h3>`;
-
-  html += `<button onclick="copyResult()">📋 Copy Result</button> `;
-  html += `<button onclick="downloadResult()">💾 Download Report</button>`;
+  html += `<div class='card ${cls}'><b>Risk:</b> ${risk}</div>`;
+  html += `<button onclick="copyResult()">Copy</button> `;
+  html += `<button onclick="downloadResult()">Download</button>`;
 
   document.getElementById("result").innerHTML = html;
 }
 
 function copyResult() {
-  const el = document.getElementById("result");
-  const range = document.createRange();
-  range.selectNode(el);
-  window.getSelection().removeAllRanges();
-  window.getSelection().addRange(range);
-  document.execCommand("copy");
-  window.getSelection().removeAllRanges();
-  alert("✅ Result copied to clipboard");
+  const t = document.getElementById("result").innerText;
+  navigator.clipboard.writeText(t);
 }
 
 function downloadResult() {
-  const el = document.getElementById("result");
-  const blob = new Blob([el.innerText], {type: "text/plain"});
-  const link = document.createElement("a");
-  link.href
+  const t = document.getElementById("result").innerText;
+  const b = new Blob([t], {type:"text/plain"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b);
+  a.download = "report.txt";
+  a.click();
+}
+</script>
 
-  
 </body>
 </html>
