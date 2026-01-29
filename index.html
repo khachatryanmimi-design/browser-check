@@ -82,19 +82,26 @@ async function check() {
   html += `<p><b>City</b>: ${ipData.city}</p>`;
   html += `<p><b>ISP</b>: ${ipData.org}</p>`;
 
-  // Умная оценка риска
   let risk = "🟢 Low risk";
   let riskClass = "ok";
 
-  if (browserData.language !== "en-US" &&
-      !browserData.timezone.toLowerCase().includes(ipData.country_code.toLowerCase())) {
-    risk = "🟡 Medium risk (possible mismatch)";
+  const timezoneCountry = browserData.timezone.split("/")[0]; // Asia / Europe / America
+  const ipCountry = ipData.country_name;
+
+  if (timezoneCountry.toLowerCase() !== ipCountry.toLowerCase()) {
+    risk = "🟡 Medium risk (timezone ≠ IP country)";
     riskClass = "warn";
   }
 
-  if (ipData.org.toLowerCase().includes("vpn") ||
-      ipData.org.toLowerCase().includes("proxy")) {
-    risk = "🔴 High risk (VPN / Proxy detected)";
+  const isp = ipData.org.toLowerCase();
+  if (
+    isp.includes("vpn") ||
+    isp.includes("proxy") ||
+    isp.includes("hosting") ||
+    isp.includes("datacenter") ||
+    isp.includes("cloud")
+  ) {
+    risk = "🔴 High risk (VPN / Proxy / Hosting detected)";
     riskClass = "high";
   }
 
@@ -121,11 +128,7 @@ function downloadResult() {
   const el = document.getElementById("result");
   const blob = new Blob([el.innerText], {type: "text/plain"});
   const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "fingerprint_report.txt";
-  link.click();
-}
-</script>
+  link.href
 
   
 </body>
