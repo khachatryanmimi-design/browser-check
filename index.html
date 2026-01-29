@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Browser & IP Check</title>
-
+<title>Pro Fingerprint & IP Tool</title>
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -25,6 +24,7 @@ button {
   border-radius:8px;
   cursor:pointer;
   font-size:15px;
+  margin:5px;
 }
 button:hover { background:#1e40af; }
 
@@ -49,7 +49,7 @@ button:hover { background:#1e40af; }
 
 <body>
 
-<h1>Browser & IP Check</h1>
+<h1>Pro Fingerprint & IP Tool</h1>
 <button onclick="check()">Check my browser</button>
 
 <div id="result"></div>
@@ -80,13 +80,18 @@ async function check() {
 
   let risk = "🟢 Low risk";
   let cls = "ok";
+  let explain = "";
 
-  if (!b.timezone.toLowerCase().includes(ip.country_name.toLowerCase())) {
+  const tzCountry = b.timezone.split("/")[0].toLowerCase();
+  const ipCountry = ip.country_name.toLowerCase();
+  const isp = ip.org.toLowerCase();
+
+  if (tzCountry !== ipCountry) {
     risk = "🟡 Medium risk";
     cls = "warn";
+    explain += "Language/Timezone does not match your IP location.<br>";
   }
 
-  const isp = ip.org.toLowerCase();
   if (
     isp.includes("vpn") ||
     isp.includes("proxy") ||
@@ -96,9 +101,17 @@ async function check() {
   ) {
     risk = "🔴 High risk";
     cls = "high";
+    explain += "Your IP looks like VPN / Proxy / Hosting.<br>";
   }
 
-  html += `<div class='card ${cls}'><b>Risk:</b> ${risk}</div>`;
+  if (explain === "" && risk === "🟢 Low risk") {
+    explain = "Everything looks consistent. No issues detected.";
+  } else {
+    explain += "If you want Low risk, connect from your usual location without VPN/proxy.";
+  }
+
+  html += `<div class='card ${cls}'><b>Risk:</b> ${risk}<br><small>${explain}</small></div>`;
+
   html += `<button onclick="copyResult()">Copy</button> `;
   html += `<button onclick="downloadResult()">Download</button>`;
 
