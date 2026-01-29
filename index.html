@@ -3,135 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pro Fingerprint & IP Tool</title>
+<title>Network & Browser Diagnostics</title>
+
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background:#0f172a;
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:#0b1120;
   color:#e5e7eb;
-  padding:40px;
-  text-align:center;
 }
-h1 {
+.container{
+  max-width:900px;
+  margin:40px auto;
+  padding:20px;
+}
+h1{
+  text-align:center;
   color:#facc15;
+  margin-bottom:30px;
+}
+button{
+  background:#2563eb;
+  border:none;
+  color:#fff;
+  padding:12px 24px;
+  border-radius:10px;
+  font-size:15px;
+  cursor:pointer;
+}
+button:hover{background:#1e40af}
+.card{
+  background:#020617;
+  border-radius:16px;
+  padding:20px;
   margin-bottom:20px;
 }
-button {
-  background:#2563eb;
-  color:white;
-  border:none;
-  padding:12px 22px;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:15px;
-  margin:5px;
+.section-title{
+  font-weight:600;
+  margin-bottom:12px;
+  color:#93c5fd;
 }
-button:hover { background:#1e40af; }
-
-#result {
-  max-width:700px;
-  margin:30px auto;
-  text-align:left;
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
 }
-
-.card {
-  background:#020617;
-  padding:18px;
-  border-radius:12px;
-  margin-bottom:15px;
+.ok{color:#22c55e}
+.warn{color:#facc15}
+.high{color:#ef4444}
+.small{font-size:13px;color:#94a3b8}
+.progress{
+  height:8px;
+  background:#1e293b;
+  border-radius:6px;
+  overflow:hidden;
 }
-
-.ok { color:#22c55e; }
-.warn { color:#facc15; }
-.high { color:#ef4444; }
+.bar{
+  height:100%;
+  width:0%;
+  background:#22c55e;
+  transition:width .4s;
+}
+.footer{
+  text-align:center;
+  margin-top:30px;
+  font-size:13px;
+  color:#64748b;
+}
 </style>
 </head>
 
 <body>
+<div class="container">
+<h1>Network & Browser Diagnostics</h1>
 
-<h1>Pro Fingerprint & IP Tool</h1>
-<button onclick="check()">Check my browser</button>
+<div style="text-align:center;margin-bottom:25px">
+<button onclick="runAll()">Run Full Check</button>
+</div>
 
-<div id="result"></div>
+<div id="output"></div>
+
+<div class="footer">
+Independent diagnostics tool · No tracking · Client-side analysis
+</div>
+</div>
 
 <script>
-async function check() {
-  const b = {
-    userAgent: navigator.userAgent,
-    language: navigator.language,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    screen: screen.width + " x " + screen.height,
-    platform: navigator.platform
+async function runAll(){
+  document.getElementById("output").innerHTML="";
+
+  browserBlock();
+  const ip = await ipBlock();
+  riskBlock(ip);
+  await speedTest();
+}
+
+function browserBlock(){
+  const b={
+    UserAgent:navigator.userAgent,
+    Language:navigator.language,
+    Timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
+    Platform:navigator.platform,
+    Screen:screen.width+" x "+screen.height,
+    CPU:navigator.hardwareConcurrency,
+    Memory:navigator.deviceMemory || "Unknown"
   };
 
-  let html = "<div class='card'><b>Browser / Fingerprint</b><br><br>";
-  for (let k in b) html += k + ": " + b[k] + "<br>";
-  html += "</div>";
-
-  const r = await fetch("https://ipapi.co/json/");
-  const ip = await r.json();
-
-  html += "<div class='card'><b>IP / Geo</b><br><br>";
-  html += "IP: " + ip.ip + "<br>";
-  html += "Country: " + ip.country_name + "<br>";
-  html += "City: " + ip.city + "<br>";
-  html += "ISP: " + ip.org + "<br>";
-  html += "</div>";
-
-  let risk = "🟢 Low risk";
-  let cls = "ok";
-  let explain = "";
-
-  const tzCountry = b.timezone.split("/")[0].toLowerCase();
-  const ipCountry = ip.country_name.toLowerCase();
-  const isp = ip.org.toLowerCase();
-
-  if (tzCountry !== ipCountry) {
-    risk = "🟡 Medium risk";
-    cls = "warn";
-    explain += "Language/Timezone does not match your IP location.<br>";
-  }
-
-  if (
-    isp.includes("vpn") ||
-    isp.includes("proxy") ||
-    isp.includes("hosting") ||
-    isp.includes("datacenter") ||
-    isp.includes("cloud")
-  ) {
-    risk = "🔴 High risk";
-    cls = "high";
-    explain += "Your IP looks like VPN / Proxy / Hosting.<br>";
-  }
-
-  if (explain === "" && risk === "🟢 Low risk") {
-    explain = "Everything looks consistent. No issues detected.";
-  } else {
-    explain += "If you want Low risk, connect from your usual location without VPN/proxy.";
-  }
-
-  html += `<div class='card ${cls}'><b>Risk:</b> ${risk}<br><small>${explain}</small></div>`;
-
-  html += `<button onclick="copyResult()">Copy</button> `;
-  html += `<button onclick="downloadResult()">Download</button>`;
-
-  document.getElementById("result").innerHTML = html;
+  let h="<div class='card'><div class='section-title'>Browser / Fingerprint</div>";
+  for(let k in b){h+=k+": "+b[k]+"<br>"}
+  h+="</div>";
+  output(h);
 }
 
-function copyResult() {
-  const t = document.getElementById("result").innerText;
-  navigator.clipboard.writeText(t);
+async function ipBlock(){
+  const r=await fetch("https://ipapi.co/json/");
+  const d=await r.json();
+
+  let h="<div class='card'><div class='section-title'>IP / Network</div>";
+  h+="IP: "+d.ip+"<br>";
+  h+="Country: "+d.country_name+"<br>";
+  h+="City: "+d.city+"<br>";
+  h+="ISP: "+d.org+"<br>";
+  h+="ASN: "+d.asn+"<br>";
+  h+="</div>";
+  output(h);
+  return d;
 }
 
-function downloadResult() {
-  const t = document.getElementById("result").innerText;
-  const b = new Blob([t], {type:"text/plain"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(b);
-  a.download = "report.txt";
-  a.click();
+function riskBlock(ip){
+  let risk="🟢 Low risk";
+  let cls="ok";
+  let reason=[];
+
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone.toLowerCase();
+  if(!tz.includes(ip.country_name.toLowerCase())){
+    risk="🟡 Medium risk";
+    cls="warn";
+    reason.push("Timezone does not match IP location");
+  }
+
+  const isp=ip.org.toLowerCase();
+  if(isp.includes("vpn")||isp.includes("proxy")||isp.includes("hosting")||isp.includes("datacenter")){
+    risk="🔴 High risk";
+    cls="high";
+    reason.push("VPN / Proxy / Hosting detected");
+  }
+
+  let h="<div class='card'><div class='section-title'>Risk Assessment</div>";
+  h+="<b class='"+cls+"'>"+risk+"</b><br>";
+  if(reason.length){
+    h+="<div class='small'>"+reason.join(". ")+"</div>";
+  }else{
+    h+="<div class='small'>Configuration looks consistent</div>";
+  }
+  h+="</div>";
+  output(h);
+}
+
+async function speedTest(){
+  let h="<div class='card'><div class='section-title'>Network Speed</div>";
+  h+="Ping: <span id='ping'>...</span> ms<br><br>";
+  h+="Download<div class='progress'><div id='down' class='bar'></div></div><br>";
+  h+="Upload<div class='progress'><div id='up' class='bar'></div></div>";
+  h+="</div>";
+  output(h);
+
+  let t0=performance.now();
+  await fetch("https://www.cloudflare.com/cdn-cgi/trace");
+  document.getElementById("ping").innerText=Math.round(performance.now()-t0);
+
+  let start=performance.now();
+  let r=await fetch("https://speed.cloudflare.com/__down?bytes=5000000");
+  await r.arrayBuffer();
+  let speed=Math.round(40/(performance.now()-start)*1000);
+  document.getElementById("down").style.width=Math.min(speed,100)+"%";
+
+  let blob=new Blob([new ArrayBuffer(2000000)]);
+  start=performance.now();
+  await fetch("https://speed.cloudflare.com/__up",{method:"POST",body:blob});
+  speed=Math.round(30/(performance.now()-start)*1000);
+  document.getElementById("up").style.width=Math.min(speed,100)+"%";
+}
+
+function output(h){
+  document.getElementById("output").innerHTML+=h;
 }
 </script>
-
 </body>
 </html>
